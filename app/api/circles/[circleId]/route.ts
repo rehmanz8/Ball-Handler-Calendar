@@ -8,7 +8,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: { circleId: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const accessToken = request.headers.get("Authorization")?.replace("Bearer ", "");
+  const supabase = createSupabaseServerClient(accessToken);
   const { data: auth } = await supabase.auth.getUser();
 
   if (!auth.user) {

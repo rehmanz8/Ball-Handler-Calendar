@@ -16,7 +16,8 @@ const eventSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const supabase = createSupabaseServerClient();
+  const accessToken = request.headers.get("Authorization")?.replace("Bearer ", "");
+  const supabase = createSupabaseServerClient(accessToken);
   const { data: auth } = await supabase.auth.getUser();
 
   if (!auth.user) {
@@ -50,7 +51,8 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const supabase = createSupabaseServerClient();
+  const accessToken = request.headers.get("Authorization")?.replace("Bearer ", "");
+  const supabase = createSupabaseServerClient(accessToken);
   const { data: auth } = await supabase.auth.getUser();
 
   if (!auth.user) {
@@ -85,7 +87,8 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const supabase = createSupabaseServerClient();
+  const accessToken = request.headers.get("Authorization")?.replace("Bearer ", "");
+  const supabase = createSupabaseServerClient(accessToken);
   const { data: auth } = await supabase.auth.getUser();
 
   if (!auth.user) {

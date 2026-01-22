@@ -1,32 +1,54 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import JoinCircleForm from "@/components/forms/JoinCircleForm";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default async function JoinCirclePage({ params }: { params: { circleId: string } }) {
-  const supabase = createSupabaseServerClient();
-  const { data } = await supabase.auth.getUser();
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-  if (!data.user) {
-    redirect(`/auth?redirect=/join/${params.circleId}`);
-  }
+export default function JoinCirclePage({ params }: { params: { circleId: string } }) {
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
 
-  const { data: existing } = await supabase
-    .from("circle_members")
-    .select("id")
-    .eq("circle_id", params.circleId)
-    .eq("user_id", data.user.id)
-    .maybeSingle();
+  useEffect(() => {
+    const checkUser = async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        router.replace(`/auth?redirect=/join/${params.circleId}`);
+        return;
+      }
 
-  if (existing) {
-    redirect(`/circle/${params.circleId}`);
+      const { data: existing } = await supabase
+        .from("circle_members")
+        .select("id")
+        .eq("circle_id", params.circleId)
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (existing) {
+        router.replace(`/circle/${params.circleId}`);
+        return;
+      }
+
+      setReady(true);
+    };
+
+    checkUser();
+  }, [params.circleId, router]);
+
+  if (!ready) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6">
+        <p className="text-slate-300">Loading...</p>
+      </main>
+    );
   }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6">
       <h1 className="text-3xl font-semibold">Join this circle</h1>
-      <p className="text-slate-300">
-        Add your display name and timezone to start scheduling.
-      </p>
+      <p className="text-slate-300">Add your display name and timezone to start scheduling.</p>
       <JoinCircleForm circleId={params.circleId} />
     </main>
   );

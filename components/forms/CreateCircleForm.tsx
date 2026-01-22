@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { getTimezones } from "@/lib/timezones";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const schema = z.object({
   name: z.string().min(2, "Circle name is required"),
@@ -30,9 +31,15 @@ export default function CreateCircleForm() {
 
   const onSubmit = async (values: FormValues) => {
     setError(null);
+    const supabase = createSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
     const response = await fetch("/api/circles", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+      },
       body: JSON.stringify(values)
     });
 

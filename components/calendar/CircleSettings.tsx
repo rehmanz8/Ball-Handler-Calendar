@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Circle, CircleMember } from "@/lib/types";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function CircleSettings({
   circle,
@@ -19,9 +20,15 @@ export default function CircleSettings({
 
   const handleRename = async () => {
     setStatus(null);
+    const supabase = createSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
     const response = await fetch(`/api/circles/${circle.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+      },
       body: JSON.stringify({ name })
     });
 
@@ -35,9 +42,15 @@ export default function CircleSettings({
   };
 
   const handleRemove = async (userId: string) => {
+    const supabase = createSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
     const response = await fetch("/api/members", {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+      },
       body: JSON.stringify({ circleId: circle.id, userId })
     });
 

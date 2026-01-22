@@ -124,10 +124,16 @@ export default function CircleCalendar({
     recurrenceStart: string | null;
     recurrenceEnd: string | null;
   }) => {
+    const supabase = createSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
     if (selectedEvent) {
       await fetch("/api/events", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
         body: JSON.stringify({
           id: selectedEvent.id,
           circleId: circle.id,
@@ -137,7 +143,10 @@ export default function CircleCalendar({
     } else {
       await fetch("/api/events", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
         body: JSON.stringify({
           circleId: circle.id,
           ...values
@@ -150,9 +159,15 @@ export default function CircleCalendar({
 
   const handleDelete = async () => {
     if (!selectedEvent) return;
+    const supabase = createSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
     await fetch("/api/events", {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+      },
       body: JSON.stringify({ id: selectedEvent.id })
     });
     setIsModalOpen(false);
